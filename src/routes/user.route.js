@@ -4,6 +4,7 @@ const {
   signup,
   signin,
   signout,
+  verifyToken,
   // forgotpassword,
   // resetPassword,
   // getIsLoggedInUserDetails,
@@ -15,6 +16,7 @@ const { isLoggedIn } = require("../middlewares/user");
 router.route("/signup").post(signup);
 router.route("/signin").post(signin);
 router.route("/signout").get(signout);
+router.route("/verifytoken").get(verifyToken);
 // router.route("/forgotpassword").post(forgotpassword);
 // router.route("/password/reset/:token").post(resetPassword);
 // router.route("/userdashboard").get(isLoggedIn, getIsLoggedInUserDetails);

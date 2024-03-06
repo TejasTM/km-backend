@@ -53,14 +53,14 @@ exports.signup = async (req, res) => {
     // Send response with token
     res.cookie("token", token, {
       expires: new Date(Date.now() + process.env.COOKIE_TIME * 24 * 60 * 60 * 1000),
-      httpOnly: true
     }).json({
       success: true,
       message: "User signed up successfully",
       token,
       user: {
         name: user.name,
-        email: user.email
+        email: user.email,
+        userType:user.role
       }
     });
   } catch (error) {
@@ -113,14 +113,14 @@ exports.signin = async (req, res) => {
     // Send response with token
     res.cookie("token", token, {
       expires: new Date(Date.now() + process.env.COOKIE_TIME * 24 * 60 * 60 * 1000),
-      httpOnly: true
     }).json({
       success: true,
       message: "User signed in successfully",
       token,
       user: {
         name: user.name,
-        email: user.email
+        email: user.email,
+        userType:user.role
       }
     });
   } catch (error) {
@@ -131,11 +131,64 @@ exports.signin = async (req, res) => {
   }
 };
 
+// Function to verify token and get user role
+
+exports.verifyToken = (req, res) => {
+  try {
+    const cookies = req.headers.cookie;
+
+    if (!cookies) {
+      return res.status(401).json({
+        success: false,
+        message: 'No cookies provided',
+      });
+    }
+
+    // Extract token from cookies
+    const tokenCookie = cookies.split(';').find(cookie => cookie.trim().startsWith('token='));
+    if (!tokenCookie) {
+      return res.status(401).json({
+        success: false,
+        message: 'No token found in cookies',
+      });
+    }
+
+    const token = tokenCookie.split('=')[1];
+
+    // Verify token
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+      if (err) {
+        console.error("JWT Verification Error:", err);
+        return res.status(403).json({
+          success: false,
+          message: 'Failed to authenticate token',
+        });
+      }
+
+      // Extract user role from decoded token
+      const userRole = decoded.userType;
+      console.error("userRole", userRole);
+
+      res.json({
+        success: true,
+        userRole,
+        token
+      });
+    });
+  } catch (error) {
+    console.error("Internal Server Error:", error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal Server Error',
+    });
+  }
+};
+
 // signout user
 exports.signout = async (req, res) => {
   try {
     // Clear the token cookie by setting it to expire in the past
-    res.clearCookie('token').json({
+    res.clearCookie('token').clearCookie('usertype').json({
       success: true,
       message: "User logged out successfully",
     });
